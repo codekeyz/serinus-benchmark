@@ -6,13 +6,15 @@ import 'package:benchmarks/shared/serinus_benchmark.dart';
 Map<String, Result?> results = {};
 
 Future<void> main(List<String> arguments) async {
+  // results['vania (no_cli)'] = await benchmarks.VaniaAppBenchmark().report();
+  // results['angel3'] = await benchmarks.Angel3AppBenchmark().report();
+
   results['shelf'] = await benchmarks.ShelfAppBenchmark().report();
   results['serinus'] = await benchmarks.SerinusAppBenchmark().report();
-  // results['vania (no_cli)'] = await benchmarks.VaniaAppBenchmark().report();
+  results['dart_frog (no_cli)'] = await benchmarks.DartFrogAppBenchmark().report();
   results['pharaoh'] = await benchmarks.PharaohAppBenchmark().report();
-  // results['angel3'] = await benchmarks.Angel3AppBenchmark().report();
-  results['dart_frog (no_cli)'] =
-      await benchmarks.DartFrogAppBenchmark().report();
+  results['dart_http'] = await benchmarks.DartHttpBenchmark().report();
+
   await saveToFile();
 }
 
@@ -22,16 +24,14 @@ Future<void> saveToFile() async {
     ' |                | Req/sec | Trans/sec | Req/sec DIFF | Avg Latency |',
     ' |----------------|---------|-----------|-------------|-----------|'
   ];
-  final sorted = Map<String, Result?>.fromEntries(results.entries.toList()
-    ..sort((a, b) => a.value!.rps.compareTo(b.value!.rps)));
+  final sorted =
+      Map<String, Result?>.fromEntries(results.entries.toList()..sort((a, b) => a.value!.rps.compareTo(b.value!.rps)));
   for (var entry in sorted.entries) {
     if (entry.value == null) {
       continue;
     }
     final entryFile = File('${entry.key.split(' ')[0]}_result.md');
-    double reqSecDiff = ((entry.value!.rps - sorted.values.first!.rps) /
-            sorted.values.first!.rps) *
-        100;
+    double reqSecDiff = ((entry.value!.rps - sorted.values.first!.rps) / sorted.values.first!.rps) * 100;
     ;
     lines.add(
         ' | ${entry.key} | ${entry.value!.rps} | ${entry.value!.transferRate} | ${reqSecDiff.sign == -1.0 ? '' : '+'}${reqSecDiff.toStringAsFixed(2)}% | ${entry.value?.avgLatency} |');

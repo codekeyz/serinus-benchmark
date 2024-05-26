@@ -11,14 +11,21 @@ environment:
 dependencies:
   dart_frog: ^1.1.0
   http: ^1.2.1
-  serinus: 
-    path: ../packages/serinus
   shelf: ^1.4.1
-  benchmark_harness: ^2.2.2 
+  benchmark_harness: ^2.2.2
   vania: ^0.1.7+3
-  pharaoh: ^0.0.6+4
+  pharaoh:
+    path: ../../pharaoh/packages/pharaoh
+    # git:
+    #   url: https://github.com/codekeyz/pharaoh.git
+    #   path: packages/pharaoh
+    #   ref: chore/perf-improvements
+  serinus:
+    git:
+      url: https://github.com/francescovallone/serinus.git
+      path: packages/serinus
   angel3_framework: ^8.3.2
-  
+
 
 dev_dependencies:
   lints: ^3.0.0

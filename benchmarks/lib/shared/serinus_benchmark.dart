@@ -18,12 +18,11 @@ abstract class SerinusBenchmark {
 
   Future<Result?> measureWeb() async {
     await setup();
-    print(
-        "Running $name wrk with $threads threads, $connections connections, and ${duration.inSeconds}s duration");
+    print("Running $name wrk with $threads threads, $connections connections, and ${duration.inSeconds}s duration");
     Result? result;
-    if(Platform.isWindows){
+    if (Platform.isWindows) {
       result = await _executeWinrkBenchmark();
-    }else{
+    } else {
       result = await _executeWrkBenchmark();
     }
     await teardown();
@@ -31,13 +30,8 @@ abstract class SerinusBenchmark {
   }
 
   Future<Result> _executeWrkBenchmark() async {
-    final process = await Process.start('wrk', [
-      '-t$threads',
-      '-c$connections',
-      '-d${duration.inSeconds}s',
-      '--latency',
-      'http://localhost:3000/'
-    ]);
+    final process = await Process.start(
+        'wrk', ['-t$threads', '-c$connections', '-d${duration.inSeconds}s', '--latency', 'http://localhost:3000/']);
     Result? result;
     process.stdout.transform(utf8.decoder).listen((message) {
       print(message);
@@ -54,11 +48,7 @@ abstract class SerinusBenchmark {
     final lines = stdout.split('\n');
     final result = Result();
     for (var line in lines) {
-      final segments = line
-          .split(' ')
-          .map((e) => e.trim())
-          .where((element) => element.isNotEmpty)
-          .toList();
+      final segments = line.split(' ').map((e) => e.trim()).where((element) => element.isNotEmpty).toList();
       if (segments.isNotEmpty) {
         final segment = segments[0];
         if (segment.contains('Requests/sec:')) {
@@ -68,21 +58,15 @@ abstract class SerinusBenchmark {
           result.transferRate = segments[1];
         }
         if (segment == 'Latency' && segments[1] != 'Distribution') {
-          result.avgLatency =
-              double.parse(segments[1].replaceAll(RegExp(r'[A-Za-z]+'), ''));
-          result.stdevLatency =
-              double.parse(segments[2].replaceAll(RegExp(r'[A-Za-z]+'), ''));
-          result.maxLatency =
-              double.parse(segments[3].replaceAll(RegExp(r'[A-Za-z]+'), ''));
+          result.avgLatency = double.parse(segments[1].replaceAll(RegExp(r'[A-Za-z]+'), ''));
+          result.stdevLatency = double.parse(segments[2].replaceAll(RegExp(r'[A-Za-z]+'), ''));
+          result.maxLatency = double.parse(segments[3].replaceAll(RegExp(r'[A-Za-z]+'), ''));
           result.stdevPerc = double.parse(segments[4].replaceAll('%', ''));
         }
         if (segment == 'Req/Sec') {
-          result.rpsAvg =
-              double.parse(segments[1].replaceAll(RegExp(r'[A-Za-z]+'), ''));
-          result.rpdStdev =
-              double.parse(segments[2].replaceAll(RegExp(r'[A-Za-z]+'), ''));
-          result.rpsMax =
-              double.parse(segments[3].replaceAll(RegExp(r'[A-Za-z]+'), ''));
+          result.rpsAvg = double.parse(segments[1].replaceAll(RegExp(r'[A-Za-z]+'), ''));
+          result.rpdStdev = double.parse(segments[2].replaceAll(RegExp(r'[A-Za-z]+'), ''));
+          result.rpsMax = double.parse(segments[3].replaceAll(RegExp(r'[A-Za-z]+'), ''));
           result.rpsPerc = double.parse(segments[4].replaceAll('%', ''));
         }
       }
@@ -95,13 +79,13 @@ abstract class SerinusBenchmark {
   }
 
   Future<void> teardown();
-  
+
   Future<Result?> _executeWinrkBenchmark() async {
-    final process = await Process.start('winrk', [
+    final process = await Process.start('wrk', [
+      '-t$threads',
+      '-c$connections',
+      '-d${duration.inSeconds}',
       'http://localhost:3000/',
-      '-t $threads',
-      '-c $connections',
-      '-d ${duration.inSeconds}',
     ]);
     Result? result;
     final resultMessage = StringBuffer();
@@ -112,7 +96,6 @@ abstract class SerinusBenchmark {
       print(message);
     });
     await process.exitCode;
-    print(resultMessage);
     result = _parseWinrkResult(resultMessage.toString());
     return result;
   }
@@ -122,28 +105,24 @@ abstract class SerinusBenchmark {
     final result = Result();
     bool metResultString = false;
     for (var line in lines) {
-      final segments = line
-          .split(' ')
-          .map((e) => e.trim())
-          .where((element) => element.isNotEmpty)
-          .toList();
+      final segments = line.split(' ').map((e) => e.trim()).where((element) => element.isNotEmpty).toList();
       if (segments.isNotEmpty) {
-        if(!metResultString){
+        if (!metResultString) {
           metResultString = segments[0] == 'Result:';
         }
-        if(metResultString){
+        if (metResultString) {
           final segment = segments[0];
           if (segment.contains('total:')) {
             result.requests = int.parse(segments[1]);
           }
           if (segment.contains('transfers:')) {
             result.readSize = double.parse(segments[1]);
-            result.transferRate = result.readSize / duration.inSeconds / 1024 / 1024 > 1 
-              ? '${(result.readSize / duration.inSeconds / 1024 / 1024).toStringAsFixed(2)} MB/s' 
-              : '${(result.readSize / duration.inSeconds / 1024).toStringAsFixed(2)} KB/s';
+            result.transferRate = result.readSize / duration.inSeconds / 1024 / 1024 > 1
+                ? '${(result.readSize / duration.inSeconds / 1024 / 1024).toStringAsFixed(2)} MB/s'
+                : '${(result.readSize / duration.inSeconds / 1024).toStringAsFixed(2)} KB/s';
           }
           if (segments[0] == 'latency') {
-            switch(segments[1]){
+            switch (segments[1]) {
               case 'min:':
                 result.minLatency = double.parse(segments[2].replaceAll(RegExp(r'[A-Za-z]+'), ''));
                 break;
@@ -166,7 +145,6 @@ abstract class SerinusBenchmark {
     }
     return result;
   }
-  
 }
 
 class Result {
